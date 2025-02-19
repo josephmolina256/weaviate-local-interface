@@ -1,0 +1,5 @@
+weaviate-client
+uvicorn
+fastapi
+python-dotenv
+sentence-transformers 
