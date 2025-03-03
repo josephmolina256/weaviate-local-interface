@@ -22,13 +22,57 @@ class WeaviateInterface:
         self.client = weaviate.connect_to_local()
         assert self.client.is_live()
 
-    def store(self, input_data: List[Dict],  collections_name: str, key_to_be_embedded: Optional[str] = None, embeddings: Optional[List[List[float]]] = None) -> Dict[str, str]:
+    def check_connection(self) -> bool:
+        """Check if the Weaviate client is live.
+
+        Returns:
+            bool: True if the client is live, False otherwise.
+        """
+        return self.client.is_live()
+
+    def client_reconnect(self) -> bool:
+        """Reconnect to the Weaviate client.
+
+        Returns:
+            bool: True if reconnected successfully, False otherwise.
+        """
+        try:
+            self.client = weaviate.connect_to_local()
+            assert self.client.is_live()
+        except Exception as e:
+            print("An error occurred in Storer.client_reconnect:")
+            traceback.print_exc()
+            return False
+        print("Reconnected to Weaviate client.")
+        return True
+
+    def client_close(self) -> bool:
+        """Close the Weaviate client.
+
+        Returns:
+            bool: True if closed successfully, False otherwise.
+        """
+        try:
+            self.client.close()
+        except Exception as e:
+            print("An error occurred in Storer.client_close:")
+            traceback.print_exc()
+            return False
+        print("Closed Weaviate client.")
+        return True
+
+    def store(self, 
+              input_data: List[Dict],  
+              collections_name: str, 
+              key_to_be_embedded: Optional[str] = None, 
+              embeddings: Optional[List[List[float]]] = None
+        ) -> Dict[str, str]:
         """General storing function into Weaviate.
 
         Args:
             input_data (List[dict]): Takes in a list of dictionaries to store in Weaviate. 
                                     Each entire dictionary is stored as a DataObject.
-            
+
             collections_name (str): The name of the collection to store the data in. 
                                     If the collection does not exist, a new collection is created.
 
@@ -38,7 +82,9 @@ class WeaviateInterface:
             embeddings (List[List[float]]): Use if generate_embeddings=False. Takes in a list of embeddings to store in Weaviate. 
                                       NOTE: The length of this list must be equal to the length of input_data 
                                       AND the data type is native floats not np.float64. See alternative store() for example conversions.
-  
+        
+        Returns:
+            Dict[str, str]: A dictionary containing the status of the operation.
         """
         if self.generate_embeddings:
             assert key_to_be_embedded
@@ -140,3 +186,45 @@ class WeaviateInterface:
             print("An error occurred in Storer.retrieve: {e}")
             traceback.print_exc()  # Prints full traceback
             self.client.close()
+    
+    def get_collection_names(self) -> list[str]:
+        """View all the collections in Weaviate.
+
+        Returns:
+            List[str]: List of collection names.
+        """
+        assert self.client.is_live()
+
+        try:
+            collections = list(self.client.collections.list_all().keys())
+            return collections
+        except Exception as e:
+            print("An error occurred in Storer.view_collections:")
+            traceback.print_exc()
+
+    def view_contents_of_collection(self, collection_name: str) -> List[Dict]:
+        """View all the contents of a collection in Weaviate.
+
+        Args:
+            collection_name (str): The name of the collection to view.
+
+        Returns:
+            List[Dict]: List of dictionaries containing the properties of the objects in the collection.
+        """
+        assert self.client.is_live()
+
+        try:
+            collection = self.client.collections.get(collection_name)
+            contents = collection.iterator()
+            contents = [content.properties for content in contents]
+            if len(contents) == 0:
+                print("No contents found.")
+                return None
+            return contents
+        except Exception as e:
+            print("An error occurred in Storer.view_contents_of_collection:")
+            traceback.print_exc()
+
+weaviate_interface = WeaviateInterface()
+
+weaviate_interface.client_close()

@@ -1,0 +1,8 @@
+[
+    {
+        "head": "how much can you allocate on the heap?",
+        "responses": "The default heap size is 1 MB. You cannot allocate more memory than you have available. For visual studio, you can set the size of the heap like in the first StackOverflow link below.\n\n<https://stackoverflow.com/questions/28653477/self-limit-heap-size-in-c>\n\n<https://docs.microsoft.com/en-us/cpp/build/reference/heap-set-heap-size?view=msvc-160>\n\n<https://stackoverflow.com/questions/12411966/maximum-memory-for-stack-static-and-heap-memory-in-c>",
+        "channel_id": "C08DSPYD9GU",
+        "thread_ts": "1739888862.259039"
+    }
+]
